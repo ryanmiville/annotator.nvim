@@ -65,19 +65,19 @@ Then export everything:
 :AnnotatorExport
 ```
 
-By default, export copies Markdown like this to the system clipboard:
+By default, export copies Plannotator-style message feedback Markdown to the
+system clipboard:
 ````markdown
-Neovim annotations:
+# Message Feedback
+
+I've reviewed this message and have 1 piece of feedback:
 
 ## lua/example.lua
 
-- lines 12-16 (annotator-ann-1)
+### 1. (lines 12–16) Feedback on: "return Effect.fail(error)"
+> This branch should probably preserve the original error.
 
-This branch should probably preserve the original error.
-
-```lua
-return Effect.fail(error)
-```
+---
 ````
 
 The default exporter clears annotations after copying them.
@@ -163,8 +163,9 @@ require("annotator").setup({
 
 ## Export Hooks
 
-By default, annotator.nvim renders generic Markdown grouped by file. Override
-the rendered Markdown with `formatter(ctx)`:
+By default, annotator.nvim renders Plannotator-style message feedback Markdown.
+Non-temporary file paths are included as file headings. Override the rendered
+Markdown with `formatter(ctx)`:
 
 ```lua
 require("annotator").setup({

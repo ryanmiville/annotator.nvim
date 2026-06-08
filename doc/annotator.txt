@@ -129,6 +129,10 @@ Options:
 ==============================================================================
 EXPORT HOOKS                                             *annotator-export-hooks*
 
+The built-in formatter renders Plannotator-style message feedback Markdown.
+Non-temporary file paths are included as file headings; /private/var, /var,
+/private/tmp, and /tmp paths are omitted.
+
 Override exported Markdown with formatter(ctx): >
 
   require("annotator").setup({

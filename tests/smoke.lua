@@ -1,4 +1,5 @@
 local annotations = require("annotator")
+local markdown = require("annotator.markdown")
 local state = require("annotator.state")
 
 local function fail(message)
@@ -107,6 +108,7 @@ vim.cmd("AnnotatorAdd")
 
 assert_equal(state.count(), 1, "AnnotatorAdd should create a comment annotation")
 assert_equal(find_kind("comment").comment, "first annotation")
+assert_contains(annotations.render(), "# Message Feedback")
 assert_contains(annotations.render(), "## README.md")
 assert_contains(annotations.render(), "first annotation")
 local extmark = annotation_extmark_at(1)
@@ -124,7 +126,7 @@ confirm_replacement("replacement line one\nreplacement line two")
 local suggestion = find_kind("suggest")
 assert_equal(suggestion.start_line, 2, "suggestion should preserve range start")
 assert_equal(suggestion.end_line, 3, "suggestion should preserve range end")
-assert_contains(suggestion.snippet, "Lightweight", "suggestion should store original snippet")
+assert_contains(suggestion.snippet, "Make annotations", "suggestion should store original snippet")
 assert_equal(suggestion.replacement, "replacement line one\nreplacement line two", "suggestion should store replacement")
 assert_equal(annotation_extmark_at(2).sign_text, "S>", "configured suggestion sign text should be used")
 
@@ -143,11 +145,27 @@ assert_equal(deletion.comment, "Remove this text.", "delete annotation should us
 assert_equal(annotation_extmark_at(5).sign_text, "D>", "configured delete sign text should be used")
 
 local rendered = annotations.render()
-assert_contains(rendered, "[comment] line 1", "comment markdown should include kind")
-assert_contains(rendered, "[suggest] lines 2-3", "suggest markdown should include kind")
-assert_contains(rendered, "Suggested replacement:", "suggest markdown should include replacement heading")
-assert_contains(rendered, "[label:simplify] line 4", "label markdown should include label id")
-assert_contains(rendered, "[delete] line 5", "delete markdown should include kind")
+assert_contains(rendered, "### 1. (line 1) Feedback on:", "comment markdown should include numbered line heading")
+assert_contains(rendered, "### 2. (lines 2–3) Feedback on:", "suggest markdown should render as comment feedback")
+assert_contains(rendered, "Suggested replacement:", "suggest markdown should include replacement text")
+assert_contains(rendered, "### 3. (line 4) [Simplify] Feedback on:", "label markdown should use quick-label heading")
+assert_contains(rendered, "### 4. (line 5) Remove this", "delete markdown should use plannotator delete heading")
+assert_contains(rendered, "## Label Summary", "label markdown should include label summary")
+
+local temp_rendered = markdown.render({
+  {
+    id = "temp",
+    kind = "comment",
+    file_path = "/tmp/annotator-message.md",
+    start_line = 1,
+    end_line = 1,
+    snippet = "temporary text",
+    comment = "temp feedback",
+    timestamp = "2026-01-01T00:00:00Z",
+  },
+})
+assert_not_contains(temp_rendered, "/tmp/annotator-message.md", "temp paths should be omitted")
+assert_contains(temp_rendered, "## 1. (line 1) Feedback on:", "temp annotations should keep message-style headings")
 
 vim.api.nvim_win_set_cursor(0, { 2, 0 })
 vim.cmd("AnnotatorEdit")
@@ -177,14 +195,14 @@ annotations.setup({
   mappings = false,
   formatter = function(ctx)
     assert_equal(#ctx.annotations, 3, "formatter should receive typed annotations")
-    assert_contains(ctx.default_format(ctx.annotations), "[suggest]", "formatter should expose default formatter")
+    assert_contains(ctx.default_format(ctx.annotations), "Suggested replacement:", "formatter should expose default formatter")
     return "CUSTOM FORMAT\n" .. ctx.default_format(ctx.annotations)
   end,
   hooks = {
     export = function(ctx)
       exported = ctx
       assert_contains(ctx.markdown, "CUSTOM FORMAT", "custom formatter should override exported markdown")
-      assert_contains(ctx.markdown, "[label:clarify]", "formatted markdown should include edited label")
+      assert_contains(ctx.markdown, "[Clarify] Feedback on:", "formatted markdown should include edited label")
 
       ctx.clear_exported()
       assert_equal(state.count(), 0, "clear_exported should remove exported annotations")

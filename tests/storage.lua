@@ -101,10 +101,10 @@ annotations.setup({
 
 assert_equal(state.count(), 4, "setup should load stored annotations")
 assert_contains(annotations.render(), "persistent smoke annotation")
-assert_contains(annotations.render(), "[suggest] lines 2-3")
+assert_contains(annotations.render(), "### 2. (lines 2–3) Feedback on:")
 assert_contains(annotations.render(), "persistent replacement")
-assert_contains(annotations.render(), "[label:clarify] line 4")
-assert_contains(annotations.render(), "[delete] line 5")
+assert_contains(annotations.render(), "### 3. (line 4) [Clarify] Feedback on:")
+assert_contains(annotations.render(), "### 4. (line 5) Remove this")
 
 vim.cmd("AnnotatorExport")
 assert_equal(state.count(), 0, "export hook should clear loaded annotations")
